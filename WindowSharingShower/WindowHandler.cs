@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace WindowSharingHider
+namespace WindowSharingShower
 {
     public static class WindowHandler
     {
@@ -58,7 +58,6 @@ namespace WindowSharingHider
             return windows;
         }
         public const Int32 WdaNone = 0x00;
-        public const Int32 WdaExcludeFromCapture = 0x11;
 
         public static Int32 GetWindowDisplayAffinity(IntPtr hWnd)
         {
@@ -70,14 +69,20 @@ namespace WindowSharingHider
         {
             return GetWindowDisplayAffinity(hWnd) != WdaNone;
         }
+
+        public static void ShowInCapture(IntPtr hWnd)
+        {
+            if (!IsHiddenFromCapture(hWnd)) return;
+            SetWindowDisplayAffinity(hWnd, WdaNone);
+        }
         public static Int32 ReadInt32(IntPtr procHandle, UInt64 addr, Boolean is32Bit)
         {
             var buffer = new Byte[8];
             ReadProcessMemory(procHandle, (UInt64)addr, buffer, 8, out _);
             return BitConverter.ToInt32(buffer, 0);
         }
-        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity current process has to own hWnd.. but does it really matter??
-        public static void SetWindowDisplayAffinity(IntPtr hWnd, Int32 dwAffinity)
+
+        static void SetWindowDisplayAffinity(IntPtr hWnd, Int32 dwAffinity)
         {
             GetWindowThreadProcessId(hWnd, out Int32 procId);
             var procHandle = OpenProcess(0x38, true, procId);

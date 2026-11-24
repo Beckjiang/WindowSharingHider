@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Windows.Forms;
 
-namespace WindowSharingHider
+namespace WindowSharingShower
 {
     public partial class MainWindow : Form
     {
@@ -24,7 +24,6 @@ namespace WindowSharingHider
         public MainWindow()
         {
             InitializeComponent();
-            UpdateHint();
             var timer = new Timer();
             timer.Interval = 500;
             timer.Tick += Timer_Tick;
@@ -34,61 +33,12 @@ namespace WindowSharingHider
         Boolean preserveSettings = false;
         Boolean syncingUi = false;
 
-        Boolean IsShowMode
-        {
-            get { return rbShowMode.Checked; }
-        }
-
-        void UpdateHint()
-        {
-            lblHint.Text = IsShowMode
-                ? "勾选的窗口会强制出现在屏幕共享中，包括已被隐藏的窗口"
-                : "勾选的窗口不会出现在屏幕共享中";
-        }
-
-        void Mode_CheckedChanged(object sender, EventArgs e)
-        {
-            var radio = sender as RadioButton;
-            if (radio == null || !radio.Checked) return;
-            UpdateHint();
-            if (!preserveSettings) return;
-            ApplyAll();
-        }
-
         void windowListCheckBox_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             if (syncingUi || !preserveSettings) return;
+            if (e.NewValue != CheckState.Checked) return;
             var window = (WindowInfo)windowListCheckBox.Items[e.Index];
-            ApplyAffinity(window, e.NewValue == CheckState.Checked);
-        }
-
-        void ApplyAll()
-        {
-            for (var i = 0; i < windowListCheckBox.Items.Count; i++)
-            {
-                var window = (WindowInfo)windowListCheckBox.Items[i];
-                ApplyAffinity(window, windowListCheckBox.GetItemChecked(i));
-            }
-        }
-
-        void ApplyAffinity(WindowInfo window, Boolean isChecked)
-        {
-            var actuallyHidden = WindowHandler.IsHiddenFromCapture(window.Handle);
-            Boolean shouldHide;
-            if (IsShowMode)
-            {
-                if (!isChecked) return;
-                shouldHide = false;
-            }
-            else
-            {
-                shouldHide = isChecked;
-            }
-
-            if (shouldHide == actuallyHidden) return;
-            WindowHandler.SetWindowDisplayAffinity(
-                window.Handle,
-                shouldHide ? WindowHandler.WdaExcludeFromCapture : WindowHandler.WdaNone);
+            WindowHandler.ShowInCapture(window.Handle);
         }
 
         void Timer_Tick(object sender, EventArgs e)
@@ -111,20 +61,29 @@ namespace WindowSharingHider
                             existingWindow.DisplayChanged = true;
                         }
                     }
-                    else windowListCheckBox.Items.Add(new WindowInfo { Title = window.Value, Handle = window.Key, stillExists = true, DisplayChanged = true });
+                    else
+                    {
+                        var hidden = WindowHandler.IsHiddenFromCapture(window.Key);
+                        windowListCheckBox.Items.Add(new WindowInfo
+                        {
+                            Title = window.Value,
+                            Handle = window.Key,
+                            stillExists = true,
+                            HiddenFromCapture = hidden,
+                            DisplayChanged = true
+                        });
+                        if (hidden)
+                            windowListCheckBox.SetItemChecked(windowListCheckBox.Items.Count - 1, true);
+                    }
                 }
                 foreach (var window in windowListCheckBox.Items.Cast<WindowInfo>().ToArray()) if (window.stillExists == false) windowListCheckBox.Items.Remove(window);
                 for (var i = 0; i < windowListCheckBox.Items.Count; i++)
                 {
                     var window = (WindowInfo)windowListCheckBox.Items[i];
-                    if (preserveSettings)
-                    {
-                        ApplyAffinity(window, windowListCheckBox.GetItemChecked(i));
-                    }
-                    else
-                    {
-                        windowListCheckBox.SetItemChecked(i, WindowHandler.IsHiddenFromCapture(window.Handle));
-                    }
+                    if (!preserveSettings && WindowHandler.IsHiddenFromCapture(window.Handle))
+                        windowListCheckBox.SetItemChecked(i, true);
+                    if (windowListCheckBox.GetItemChecked(i))
+                        WindowHandler.ShowInCapture(window.Handle);
 
                     var actuallyHidden = WindowHandler.IsHiddenFromCapture(window.Handle);
                     if (window.HiddenFromCapture != actuallyHidden)
