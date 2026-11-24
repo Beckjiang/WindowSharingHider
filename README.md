@@ -1,9 +1,7 @@
 # Window Sharing Shower
 Forces windows that were hidden from screen sharing to show up again. Works with Teams, Zoom, Discord, etc.
 
-Check a window to force it into screen capture. Unchecking stops forcing it; this app never hides windows.
-
-Currently hidden windows are selected on first scan so they can be revealed immediately.
+Check a window to force it into screen capture. Nothing is shown automatically; only user-selected windows are forced visible. Unchecking stops forcing it; this app never hides windows.
 
 Single app, no dll's, works on both x86/x64
 

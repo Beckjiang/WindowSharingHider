@@ -30,12 +30,11 @@ namespace WindowSharingShower
             timer.Start();
         }
 
-        Boolean preserveSettings = false;
         Boolean syncingUi = false;
 
         void windowListCheckBox_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            if (syncingUi || !preserveSettings) return;
+            if (syncingUi) return;
             if (e.NewValue != CheckState.Checked) return;
             var window = (WindowInfo)windowListCheckBox.Items[e.Index];
             WindowHandler.ShowInCapture(window.Handle);
@@ -63,25 +62,20 @@ namespace WindowSharingShower
                     }
                     else
                     {
-                        var hidden = WindowHandler.IsHiddenFromCapture(window.Key);
                         windowListCheckBox.Items.Add(new WindowInfo
                         {
                             Title = window.Value,
                             Handle = window.Key,
                             stillExists = true,
-                            HiddenFromCapture = hidden,
+                            HiddenFromCapture = WindowHandler.IsHiddenFromCapture(window.Key),
                             DisplayChanged = true
                         });
-                        if (hidden)
-                            windowListCheckBox.SetItemChecked(windowListCheckBox.Items.Count - 1, true);
                     }
                 }
                 foreach (var window in windowListCheckBox.Items.Cast<WindowInfo>().ToArray()) if (window.stillExists == false) windowListCheckBox.Items.Remove(window);
                 for (var i = 0; i < windowListCheckBox.Items.Count; i++)
                 {
                     var window = (WindowInfo)windowListCheckBox.Items[i];
-                    if (!preserveSettings && WindowHandler.IsHiddenFromCapture(window.Handle))
-                        windowListCheckBox.SetItemChecked(i, true);
                     if (windowListCheckBox.GetItemChecked(i))
                         WindowHandler.ShowInCapture(window.Handle);
 
@@ -102,7 +96,6 @@ namespace WindowSharingShower
             {
                 windowListCheckBox.EndUpdate();
                 syncingUi = false;
-                preserveSettings = true;
             }
         }
 

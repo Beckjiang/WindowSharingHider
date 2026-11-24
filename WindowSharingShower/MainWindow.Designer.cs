@@ -51,7 +51,7 @@
             this.lblHint.Name = "lblHint";
             this.lblHint.Size = new System.Drawing.Size(336, 24);
             this.lblHint.TabIndex = 0;
-            this.lblHint.Text = "勾选窗口，将其强制显示在屏幕共享中";
+            this.lblHint.Text = "请勾选要强制显示在屏幕共享中的窗口";
             this.lblHint.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // windowListCheckBox
