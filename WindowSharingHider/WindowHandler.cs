@@ -57,10 +57,18 @@ namespace WindowSharingHider
             }, IntPtr.Zero);
             return windows;
         }
+        public const Int32 WdaNone = 0x00;
+        public const Int32 WdaExcludeFromCapture = 0x11;
+
         public static Int32 GetWindowDisplayAffinity(IntPtr hWnd)
         {
             GetWindowDisplayAffinity(hWnd, out Int32 dwAffinity);
             return dwAffinity;
+        }
+
+        public static Boolean IsHiddenFromCapture(IntPtr hWnd)
+        {
+            return GetWindowDisplayAffinity(hWnd) != WdaNone;
         }
         public static Int32 ReadInt32(IntPtr procHandle, UInt64 addr, Boolean is32Bit)
         {
